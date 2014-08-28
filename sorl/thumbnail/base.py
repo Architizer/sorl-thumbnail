@@ -3,11 +3,12 @@ from sorl.thumbnail.helpers import tokey, serialize
 from sorl.thumbnail.images import ImageFile
 from sorl.thumbnail import default
 from sorl.thumbnail.parsers import parse_geometry
-
+import os
 
 EXTENSIONS = {
     'JPEG': 'jpg',
     'PNG': 'png',
+    'GIF': 'gif',
 }
 
 
@@ -29,6 +30,23 @@ class ThumbnailBackend(object):
         ('orientation', 'THUMBNAIL_ORIENTATION'),
     )
 
+    def file_extension(self, file_):
+        return os.path.splitext(file_.name)[1].lower()
+
+    def _get_format(self, file_):
+        file_extension = self.file_extension(file_)
+
+        if file_extension == '.jpg' or file_extension == '.jpeg':
+            return 'JPEG'
+        elif file_extension == '.png':
+            return 'PNG'
+        elif file_extension == '.gif':
+            return 'GIF'
+        else:
+            from django.conf import settings
+
+            return getattr(settings, 'THUMBNAIL_FORMAT', 'JPEG')
+
     def get_thumbnail(self, file_, geometry_string, force_create=True,
                       **options):
         """
@@ -37,6 +55,12 @@ class ThumbnailBackend(object):
         secondly it will create it.
         """
         source = ImageFile(file_)
+
+        if settings.THUMBNAIL_PRESERVE_FORMAT:
+            format = self._get_format(file_)
+            if format == 'GIF':
+                options.setdefault('format', format)
+
         for key, value in self.default_options.iteritems():
             options.setdefault(key, value)
         # For the future I think it is better to add options only if they
