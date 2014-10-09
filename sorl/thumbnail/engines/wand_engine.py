@@ -48,12 +48,13 @@ class Engine(EngineBase):
         return image
 
     def _colorspace(self, image, colorspace):
-        if colorspace == 'RGB':
-            image.type = 'truecolor'
-        elif colorspace == 'GRAY':
-            image.type = 'grayscale'
-        else:
-            return image
+        if str(image.format) == 'GIF':
+            if colorspace == 'RGB':
+                image.type = 'truecolor'
+            elif colorspace == 'GRAY':
+                image.type = 'grayscale'
+            else:
+                return image
         return image
 
     def _scale(self, image, width, height):
